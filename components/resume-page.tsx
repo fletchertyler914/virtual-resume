@@ -15,7 +15,14 @@ export function ResumePage() {
     offset: ['start start', 'end end'],
   });
 
-  const sectionRefs = {
+  const sectionRefs: {
+    [key in
+      | 'summary'
+      | 'experience'
+      | 'skills'
+      | 'education'
+      | 'certifications']: React.MutableRefObject<HTMLDivElement | null>;
+  } = {
     summary: useRef(null),
     experience: useRef(null),
     skills: useRef(null),
@@ -36,9 +43,17 @@ export function ResumePage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const scrollToSection = (section) => {
+  const scrollToSection = (
+    section:
+      | 'summary'
+      | 'experience'
+      | 'skills'
+      | 'education'
+      | 'certifications'
+  ) => {
     sectionRefs[section].current?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -91,7 +106,16 @@ export function ResumePage() {
           {Object.keys(sectionRefs).map((section) => (
             <Button
               key={section}
-              onClick={() => scrollToSection(section)}
+              onClick={() =>
+                scrollToSection(
+                  section as
+                    | 'summary'
+                    | 'experience'
+                    | 'skills'
+                    | 'education'
+                    | 'certifications'
+                )
+              }
               variant='ghost'
               className={`text-lg ${
                 activeSection === section
