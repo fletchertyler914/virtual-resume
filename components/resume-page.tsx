@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Github, Linkedin, Mail, Phone } from 'lucide-react';
+import { Github, Linkedin, Mail, Phone, Download } from 'lucide-react';
 import Link from 'next/link';
 
 export function ResumePage() {
@@ -302,6 +302,15 @@ export function ResumePage() {
             >
               <Link href='tel:+6156913738' passHref>
                 <Phone className='h-6 w-6' />
+              </Link>
+            </Button>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='text-white hover:text-[#d69e49]'
+            >
+              <Link href='/resume.pdf' passHref>
+                <Download className='h-6 w-6' />
               </Link>
             </Button>
           </div>
