@@ -1,33 +1,72 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import {
+  useState,
+  useRef,
+  useEffect,
+  AwaitedReactNode,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+} from 'react';
+import { motion, useScroll, useSpring, useInView } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Github, Linkedin, Mail, Phone, Download } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import Link from 'next/link';
+import {
+  Github,
+  Linkedin,
+  Mail,
+  Phone,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Moon,
+  Sun,
+} from 'lucide-react';
 
 export function ResumePage() {
-  const [activeSection, setActiveSection] = useState('summary');
+  const [activeSection, setActiveSection] = useState('about');
+  const [darkMode, setDarkMode] = useState(false);
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  const sectionRefs: {
-    [key in
-      | 'summary'
-      | 'experience'
-      | 'skills'
-      | 'education'
-      | 'certifications']: React.MutableRefObject<HTMLDivElement | null>;
-  } = {
-    summary: useRef(null),
-    experience: useRef(null),
-    skills: useRef(null),
-    education: useRef(null),
-    certifications: useRef(null),
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  const sectionRefs = {
+    about: useRef<HTMLDivElement>(null),
+    experience: useRef<HTMLDivElement>(null),
+    skills: useRef<HTMLDivElement>(null),
+    education: useRef<HTMLDivElement>(null),
+    certifications: useRef<HTMLDivElement>(null),
   };
 
   useEffect(() => {
@@ -43,155 +82,126 @@ export function ResumePage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const scrollToSection = (
-    section:
-      | 'summary'
-      | 'experience'
-      | 'skills'
-      | 'education'
-      | 'certifications'
-  ) => {
+  const scrollToSection = (section: keyof typeof sectionRefs) => {
     sectionRefs[section].current?.scrollIntoView({ behavior: 'smooth' });
   };
-
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
-  const opacity = useTransform(
-    scrollYProgress,
-    [0, 0.2, 0.8, 1],
-    [1, 0.3, 0.3, 1]
-  );
 
   return (
     <div
       ref={containerRef}
-      className='min-h-screen bg-gray-50 text-gray-900 overflow-hidden'
+      className={`min-h-screen bg-white dark:bg-[#1a1a2e] text-gray-900 dark:text-white transition-colors duration-300`}
     >
       <motion.div
-        className='fixed inset-0 z-0'
-        style={{
-          backgroundImage:
-            'linear-gradient(to bottom right, #f3e7d3, #d6ae7b, #d69e49)',
-          y: backgroundY,
-          opacity,
-        }}
+        className='fixed top-0 left-0 right-0 h-1 bg-yellow-400 origin-left z-50'
+        style={{ scaleX }}
       />
 
-      <main className='relative z-10 pt-20 pb-12 max-w-6xl mx-auto px-4'>
-        <motion.h1
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className='text-6xl font-bold mb-4 text-center  text-[#4a4a4a]'
-        >
-          TYLER FLETCHER
-        </motion.h1>
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className='text-3xl text-center mb-12 text-[#6a6a6a]'
-        >
-          SENIOR SOFTWARE ENGINEER
-        </motion.h2>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
-          className='flex justify-center space-x-4 mb-16'
-        >
-          {Object.keys(sectionRefs).map((section) => (
-            <Button
-              key={section}
-              onClick={() =>
-                scrollToSection(
-                  section as
-                    | 'summary'
-                    | 'experience'
-                    | 'skills'
-                    | 'education'
-                    | 'certifications'
-                )
-              }
-              variant='ghost'
-              className={`text-lg ${
-                activeSection === section
-                  ? 'text-[#d69e49] font-bold'
-                  : 'text-gray-600'
-              }`}
-            >
-              {section.charAt(0).toUpperCase() + section.slice(1)}
-            </Button>
-          ))}
-        </motion.div>
-
-        <section ref={sectionRefs.summary} className='mb-20'>
-          <motion.h3
+      <header className='fixed top-0 left-0 right-0 bg-white dark:bg-[#16213e] z-40 py-4 transition-colors duration-300'>
+        <nav className='max-w-6xl mx-auto px-4 flex justify-between items-center'>
+          <motion.h1
             initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className='text-3xl font-bold mb-8 text-[#d69e49] '
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className='text-2xl font-bold text-yellow-400'
           >
-            Summary
-          </motion.h3>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-            {Object.entries(summary).map(([key, value], index) => (
-              <motion.div
-                key={key}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className='bg-white p-6 rounded-lg shadow-md'
+            Tyler Fletcher
+          </motion.h1>
+          <div className='flex space-x-4'>
+            {Object.keys(sectionRefs).map((section) => (
+              <Button
+                key={section}
+                onClick={() =>
+                  scrollToSection(section as keyof typeof sectionRefs)
+                }
+                variant='ghost'
+                className={`text-sm ${
+                  activeSection === section
+                    ? 'text-yellow-400 font-bold'
+                    : 'text-gray-600 dark:text-gray-300'
+                }`}
               >
-                <h4 className='text-xl font-semibold text-[#d69e49] mb-2 '>
-                  {key}
-                </h4>
-                <p className='text-gray-600'>{value}</p>
-              </motion.div>
+                {section.charAt(0).toUpperCase() + section.slice(1)}
+              </Button>
             ))}
           </div>
+        </nav>
+      </header>
+
+      <main className='pt-20 pb-12 max-w-6xl mx-auto px-4'>
+        <section
+          ref={sectionRefs.about}
+          className='min-h-screen flex items-center justify-center'
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className='text-center'
+          >
+            <h2 className='text-6xl font-bold mb-4 text-yellow-400'>
+              Senior Software Engineer
+            </h2>
+            <p className='text-xl mb-8 max-w-2xl mx-auto'>
+              Driven by an insatiable curiosity, I approach technology not just
+              as a tool, but as a means to craft
+              <span className='text-yellow-400'> impactful </span> solutions,
+              <span className='text-yellow-400'> bridge gaps</span>, and
+              <span className='text-yellow-400'> push boundaries</span>.
+            </p>
+            <Button
+              onClick={() => scrollToSection('experience')}
+              className='bg-yellow-400 hover:bg-yellow-500 text-gray-900'
+            >
+              Explore My Journey <ChevronDown className='ml-2 h-4 w-4' />
+            </Button>
+          </motion.div>
         </section>
 
-        <section ref={sectionRefs.experience} className='mb-20'>
+        <section ref={sectionRefs.experience} className='mb-20 pt-20'>
           <motion.h3
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className='text-3xl font-bold mb-8 text-[#d69e49] '
+            className='text-3xl font-bold mb-8 text-yellow-400'
           >
             Experience
           </motion.h3>
-          {experiences.map((exp, index) => (
-            <motion.div
-              key={exp.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className='bg-white p-6 rounded-lg shadow-md mb-6'
-            >
-              <h4 className='text-2xl font-bold text-[#d69e49] mb-2 '>
-                {exp.title}
-              </h4>
-              <p className='text-lg mb-2 text-gray-700'>{exp.company}</p>
-              <p className='text-sm text-gray-500 mb-4'>{exp.date}</p>
-              <ul className='list-disc list-inside space-y-2 text-gray-600'>
-                {exp.responsibilities.map((resp, idx) => (
-                  <li key={idx}>{resp}</li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
+          <div className='space-y-8'>
+            {experiences
+              .slice(0, isExpanded ? experiences.length : 3)
+              .map((exp, index) => (
+                <ExperienceCard key={index} experience={exp} />
+              ))}
+          </div>
+          {experiences.length > 3 && (
+            <div className='text-center mt-8'>
+              <Button
+                onClick={toggleExpand}
+                variant='outline'
+                className='text-yellow-400 border-yellow-400'
+              >
+                {isExpanded ? (
+                  <>
+                    Show Less <ChevronUp className='ml-2 h-4 w-4' />
+                  </>
+                ) : (
+                  <>
+                    Show More <ChevronDown className='ml-2 h-4 w-4' />
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </section>
 
-        <section ref={sectionRefs.skills} className='mb-20'>
+        <section ref={sectionRefs.skills} className='mb-20 pt-20'>
           <motion.h3
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className='text-3xl font-bold mb-8 text-[#d69e49] '
+            className='text-3xl font-bold mb-8 text-yellow-400'
           >
             Skills
           </motion.h3>
@@ -203,7 +213,7 @@ export function ResumePage() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <Badge className='bg-[#d69e49] text-white hover:bg-[#c48d38] px-3 py-1 text-lg'>
+                <Badge className='bg-gray-200 dark:bg-[#0f3460] text-gray-900 dark:text-white hover:bg-yellow-400 hover:text-gray-900 px-3 py-1 text-lg'>
                   {skill}
                 </Badge>
               </motion.div>
@@ -211,12 +221,12 @@ export function ResumePage() {
           </div>
         </section>
 
-        <section ref={sectionRefs.education} className='mb-20'>
+        <section ref={sectionRefs.education} className='mb-20 pt-20'>
           <motion.h3
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className='text-3xl font-bold mb-8 text-[#d69e49] '
+            className='text-3xl font-bold mb-8 text-yellow-400'
           >
             Education
           </motion.h3>
@@ -226,96 +236,115 @@ export function ResumePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className='bg-white p-6 rounded-lg shadow-md mb-6'
+              className='bg-gray-100 dark:bg-[#0f3460] p-6 rounded-lg shadow-md mb-6'
             >
-              <h4 className='text-xl font-semibold text-[#d69e49] '>
+              <h4 className='text-xl font-semibold text-yellow-400'>
                 {edu.degree}
               </h4>
-              <p className='text-lg text-gray-700'>{edu.school}</p>
-              <p className='text-sm text-gray-500'>{edu.year}</p>
+              <p className='text-lg'>{edu.school}</p>
+              <p className='text-sm text-gray-500 dark:text-gray-400'>
+                {edu.year}
+              </p>
             </motion.div>
           ))}
         </section>
 
-        <section ref={sectionRefs.certifications} className='mb-20'>
+        <section ref={sectionRefs.certifications} className='mb-20 pt-20'>
           <motion.h3
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className='text-3xl font-bold mb-8 text-[#d69e49] '
+            className='text-3xl font-bold mb-8 text-yellow-400'
           >
             Certifications
           </motion.h3>
-          {certifications.map((cert, index) => (
-            <motion.div
-              key={cert.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className='bg-white p-6 rounded-lg shadow-md mb-6'
-            >
-              <h4 className='text-xl font-semibold text-[#d69e49] '>
-                {cert.name}
-              </h4>
-              <p className='text-lg text-gray-700'>{cert.issuer}</p>
-              <p className='text-sm text-gray-500 mb-2'>{cert.year}</p>
-              <p className='text-gray-600'>{cert.description}</p>
-            </motion.div>
-          ))}
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            {certifications.map((cert, index) => (
+              <motion.div
+                key={cert.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className='bg-gray-100 dark:bg-[#0f3460] p-6 rounded-lg shadow-md'
+              >
+                <h4 className='text-xl font-semibold text-yellow-400'>
+                  {cert.name}
+                </h4>
+                <p className='text-lg'>{cert.issuer}</p>
+                <p className='text-sm text-gray-500 dark:text-gray-400 mb-2'>
+                  {cert.year}
+                </p>
+                <p className='text-gray-700 dark:text-gray-300'>
+                  {cert.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </section>
       </main>
 
-      <footer className='bg-[#4a4a4a] text-white py-8'>
+      <footer className='bg-gray-100 dark:bg-[#16213e] py-8 transition-colors duration-300'>
         <div className='max-w-6xl mx-auto px-4 flex flex-col items-center'>
           <div className='flex space-x-4 mb-4'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='text-white hover:text-[#d69e49]'
-            >
-              <Link href='https://github.com/fletchertyler914' passHref>
+            <Link href='https://github.com/fletchertyler914' passHref>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='text-gray-600 dark:text-gray-300 hover:text-yellow-400'
+              >
                 <Github className='h-6 w-6' />
-              </Link>
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='text-white hover:text-[#d69e49]'
-            >
-              <Link href='https://www.linkedin.com/in/fletchertyler/' passHref>
+              </Button>
+            </Link>
+            <Link href='https://www.linkedin.com/in/fletchertyler/' passHref>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='text-gray-600 dark:text-gray-300 hover:text-yellow-400'
+              >
                 <Linkedin className='h-6 w-6' />
-              </Link>
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='text-white hover:text-[#d69e49]'
-            >
-              <Link href='mailto:fletchertyler914@gmail.com' passHref>
+              </Button>
+            </Link>
+            <Link href='mailto:fletchertyler914@gmail.com' passHref>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='text-gray-600 dark:text-gray-300 hover:text-yellow-400'
+              >
                 <Mail className='h-6 w-6' />
-              </Link>
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='text-white hover:text-[#d69e49]'
-            >
-              <Link href='tel:+6156913738' passHref>
-                <Phone className='h-6 w-6' />
-              </Link>
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='text-white hover:text-[#d69e49]'
-            >
-              <Link href='/resume.pdf' passHref>
+              </Button>
+            </Link>
+            <Link href='tel:+1234567890' passHref>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='text-gray-600 dark:text-gray-300 hover:text-yellow-400'
+              >
+                <Link href='tel:+6156913738' passHref>
+                  <Phone className='h-6 w-6' />
+                </Link>
+              </Button>
+            </Link>
+            <Link href='/resume.pdf' passHref>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='text-gray-600 dark:text-gray-300 hover:text-yellow-400'
+              >
                 <Download className='h-6 w-6' />
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
-          <p className='text-sm text-gray-300'>
-            © 2024 Tyler J. Fletcher. All rights reserved.
+          <div className='flex items-center space-x-2 mb-4'>
+            <Sun className='h-4 w-4 text-gray-600 dark:text-gray-300' />
+            <Switch
+              checked={darkMode}
+              onCheckedChange={toggleDarkMode}
+              aria-label='Toggle dark mode'
+            />
+            <Moon className='h-4 w-4 text-gray-600 dark:text-gray-300' />
+          </div>
+          <p className='text-sm text-gray-500 dark:text-gray-400'>
+            © 2024 Tyler Fletcher. All rights reserved.
           </p>
         </div>
       </footer>
@@ -323,16 +352,55 @@ export function ResumePage() {
   );
 }
 
-const summary = {
-  'Strategic Vision':
-    'Spearheading full-scale products and guiding teams, aligning every line of code with overarching objectives.',
-  'Precision & Craftsmanship':
-    "Crafting code that synergize's functionality and finesse, rigorously tested and optimized.",
-  'Team Leadership':
-    'Harmonizing product narratives and team dynamics to achieve unified goals.',
-  'Forward-Thinking':
-    'Perpetually scouting for transformative tools, frameworks, and methodologies in the tech realm.',
-};
+interface Experience {
+  title: string;
+  company: string;
+  date: string;
+  responsibilities: string[];
+}
+
+function ExperienceCard({ experience }: { experience: Experience }) {
+  const cardRef = useRef(null);
+  const isInView = useInView(cardRef, { once: true });
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 50 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+      transition={{ duration: 0.5 }}
+      className='bg-gray-100 dark:bg-[#0f3460] p-6 rounded-lg shadow-md'
+    >
+      <h4 className='text-2xl font-bold text-yellow-400 mb-2'>
+        {experience.title}
+      </h4>
+      <p className='text-lg mb-2'>{experience.company}</p>
+      <p className='text-sm text-gray-500 dark:text-gray-400 mb-4'>
+        {experience.date}
+      </p>
+      <ul className='list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300'>
+        {experience.responsibilities.map(
+          (
+            resp:
+              | string
+              | number
+              | bigint
+              | boolean
+              | ReactElement<unknown, string | JSXElementConstructor<unknown>>
+              | Iterable<ReactNode>
+              | ReactPortal
+              | Promise<AwaitedReactNode>
+              | null
+              | undefined,
+            idx: Key | null | undefined
+          ) => (
+            <li key={idx}>{resp}</li>
+          )
+        )}
+      </ul>
+    </motion.div>
+  );
+}
 
 const experiences = [
   {
@@ -375,7 +443,7 @@ const experiences = [
     responsibilities: [
       'Served as a founding engineer, laying the foundation of PolicyCo.',
       'Built an extensive, modular WYSIWYG document editor for managing policies and procedures with collaborative editing capabilities.',
-      "Onboarded and trained 3 engineers after 2.5 years, expanding the product's  feature suite.",
+      "Onboarded and trained 3 engineers after 2.5 years, expanding the product's feature suite.",
     ],
   },
   {
