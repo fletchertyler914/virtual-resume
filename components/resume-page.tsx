@@ -104,7 +104,7 @@ export function ResumePage() {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className='text-2xl font-bold text-yellow-400'
+            className='text-2xl font-bold bg-yellow-400 px-4 py-2 rounded-lg text-white'
           >
             Tyler Fletcher
           </motion.h1>
