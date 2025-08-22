@@ -16,11 +16,14 @@ import {
   Download,
   Moon,
   Sun,
+  Menu,
+  X,
 } from 'lucide-react';
 
 export function ResumePage() {
   const [activeSection, setActiveSection] = useState('about');
   const [darkMode, setDarkMode] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -37,8 +40,27 @@ export function ResumePage() {
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
   useEffect(() => {
-    if (darkMode) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
+    // Check for system preference or default to dark mode
+    const savedMode = localStorage.getItem('darkMode');
+    const systemPrefersDark = window.matchMedia(
+      '(prefers-color-scheme: dark)'
+    ).matches;
+
+    if (savedMode !== null) {
+      setDarkMode(savedMode === 'true');
+    } else {
+      setDarkMode(systemPrefersDark || true); // Default to dark mode
+    }
+  }, []);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
   }, [darkMode]);
 
   const sectionRefs = {
@@ -76,8 +98,8 @@ export function ResumePage() {
         style={{ scaleX }}
       />
 
-      <header className='fixed top-0 left-0 right-0 z-40 py-4'>
-        <nav className='max-w-6xl mx-auto px-4 flex justify-between items-center glass rounded-xl px-6 py-3'>
+      <header className='fixed top-0 left-0 right-0 z-40 py-4 px-4 sm:px-6'>
+        <nav className='max-w-6xl mx-auto flex justify-between items-center glass rounded-xl px-4 sm:px-6 py-3'>
           <motion.h1
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -104,7 +126,25 @@ export function ResumePage() {
               </Button>
             ))}
           </div>
-          <div className='flex items-center gap-2'>
+
+          {/* Mobile navigation */}
+          <div className='md:hidden flex items-center gap-2'>
+            <Button
+              variant='glass'
+              size='sm'
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className='text-xs rounded-full px-2 py-1'
+            >
+              {mobileMenuOpen ? (
+                <X className='h-4 w-4' />
+              ) : (
+                <Menu className='h-4 w-4' />
+              )}
+            </Button>
+          </div>
+
+          {/* Desktop theme toggle */}
+          <div className='hidden md:flex items-center gap-2'>
             <Sun className='h-4 w-4 text-foreground/70' />
             <Switch
               checked={darkMode}
@@ -114,9 +154,53 @@ export function ResumePage() {
             <Moon className='h-4 w-4 text-foreground/70' />
           </div>
         </nav>
+
+        {/* Mobile dropdown menu */}
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className='md:hidden mt-2 glass rounded-xl p-4'
+          >
+            <div className='space-y-2'>
+              {Object.keys(sectionRefs).map((section) => (
+                <Button
+                  key={section}
+                  onClick={() => {
+                    scrollToSection(section as keyof typeof sectionRefs);
+                    setMobileMenuOpen(false);
+                  }}
+                  variant='ghost'
+                  className={`w-full justify-start text-sm ${
+                    activeSection === section
+                      ? 'text-primary font-semibold'
+                      : 'text-foreground/80'
+                  }`}
+                >
+                  {section.charAt(0).toUpperCase() + section.slice(1)}
+                </Button>
+              ))}
+              <div className='border-t border-foreground/20 pt-2 mt-2'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-xs text-foreground/70'>Theme</span>
+                  <div className='flex items-center gap-2'>
+                    <Sun className='h-3 w-3 text-foreground/70' />
+                    <Switch
+                      checked={darkMode}
+                      onCheckedChange={toggleDarkMode}
+                      aria-label='Toggle dark mode'
+                    />
+                    <Moon className='h-3 w-3 text-foreground/70' />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </header>
 
-      <main className='pt-24 pb-16 max-w-6xl mx-auto px-4'>
+      <main className='pt-24 pb-16 max-w-6xl mx-auto px-4 sm:px-6'>
         <section
           ref={sectionRefs.about}
           className='min-h-[70vh] flex items-center justify-center'
@@ -127,28 +211,31 @@ export function ResumePage() {
             transition={{ duration: 0.8 }}
             className='text-center'
           >
-            <div className='inline-block glass rounded-2xl px-6 py-3 mb-5'>
-              <span className='text-xs tracking-widest uppercase text-foreground/80'>
+            <div className='inline-block glass rounded-2xl px-4 sm:px-6 py-3 mb-5'>
+              <span className='text-xs sm:text-sm tracking-widest uppercase text-foreground/80'>
                 Senior Software Engineer
               </span>
             </div>
-            <h2 className='font-display text-5xl md:text-6xl font-bold mb-5 tracking-tight'>
+            <h2 className='font-display text-4xl sm:text-5xl md:text-6xl font-bold mb-5 tracking-tight'>
               Building delightful, scalable products
             </h2>
-            <p className='text-lg md:text-xl max-w-2xl mx-auto text-foreground/80'>
+            <p className='text-base sm:text-lg md:text-xl max-w-2xl mx-auto text-foreground/80 px-4 sm:px-0'>
               10+ years shipping full‑stack software, leading teams, and taking
               products from 0→1. Strong in Full-Stack web, cloud, data, and
               pragmatic AI integrations.
             </p>
-            <div className='mt-8 flex items-center justify-center gap-3'>
+            <div className='mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 px-4 sm:px-0'>
               <Button
                 onClick={() => scrollToSection('experience')}
-                className='rounded-full px-5 py-2.5'
+                className='rounded-full px-5 py-2.5 w-full sm:w-auto'
               >
                 Explore experience <ChevronDown className='ml-2 h-4 w-4' />
               </Button>
-              <Link href='/resume.pdf' passHref>
-                <Button variant='glass' className='rounded-full px-5 py-2.5'>
+              <Link href='/resume.pdf' passHref className='w-full sm:w-auto'>
+                <Button
+                  variant='glass'
+                  className='rounded-full px-5 py-2.5 w-full'
+                >
                   Download resume <Download className='ml-2 h-4 w-4' />
                 </Button>
               </Link>
@@ -161,7 +248,7 @@ export function ResumePage() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className='text-2xl md:text-3xl font-display font-bold mb-6'
+            className='text-xl sm:text-2xl md:text-3xl font-display font-bold mb-6'
           >
             Experience
           </motion.h3>
@@ -198,11 +285,11 @@ export function ResumePage() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className='text-2xl md:text-3xl font-display font-bold mb-6'
+            className='text-xl sm:text-2xl md:text-3xl font-display font-bold mb-6'
           >
             Skills
           </motion.h3>
-          <div className='flex flex-wrap gap-3'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3'>
             {skills.map((skill, index) => (
               <motion.div
                 key={skill}
@@ -212,7 +299,7 @@ export function ResumePage() {
               >
                 <Badge
                   variant='glass'
-                  className='text-sm md:text-base px-3 py-1.5 rounded-full'
+                  className='text-xs sm:text-sm md:text-base px-3 py-2 rounded-full w-full text-center justify-center'
                 >
                   {skill}
                 </Badge>
@@ -226,7 +313,7 @@ export function ResumePage() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className='text-2xl md:text-3xl font-display font-bold mb-6'
+            className='text-xl sm:text-2xl md:text-3xl font-display font-bold mb-6'
           >
             Education
           </motion.h3>
@@ -236,13 +323,17 @@ export function ResumePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.08 }}
-              className='glass rounded-2xl p-6 mb-4'
+              className='glass rounded-2xl p-4 sm:p-6 mb-4'
             >
-              <h4 className='text-xl font-semibold font-display'>
+              <h4 className='text-lg sm:text-xl font-semibold font-display'>
                 {edu.degree}
               </h4>
-              <p className='text-foreground/90'>{edu.school}</p>
-              <p className='text-sm text-foreground/70'>{edu.year}</p>
+              <p className='text-sm sm:text-base text-foreground/90'>
+                {edu.school}
+              </p>
+              <p className='text-xs sm:text-sm text-foreground/70'>
+                {edu.year}
+              </p>
             </motion.div>
           ))}
         </section>
@@ -252,7 +343,7 @@ export function ResumePage() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className='text-2xl md:text-3xl font-display font-bold mb-6'
+            className='text-xl sm:text-2xl md:text-3xl font-display font-bold mb-6'
           >
             Certifications
           </motion.h3>
@@ -263,14 +354,20 @@ export function ResumePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, delay: index * 0.08 }}
-                className='glass rounded-2xl p-6'
+                className='glass rounded-2xl p-4 sm:p-6'
               >
-                <h4 className='text-lg md:text-xl font-semibold font-display'>
+                <h4 className='text-base sm:text-lg md:text-xl font-semibold font-display'>
                   {cert.name}
                 </h4>
-                <p className='text-foreground/90'>{cert.issuer}</p>
-                <p className='text-sm text-foreground/70 mb-2'>{cert.year}</p>
-                <p className='text-foreground/80'>{cert.description}</p>
+                <p className='text-sm sm:text-base text-foreground/90'>
+                  {cert.issuer}
+                </p>
+                <p className='text-xs sm:text-sm text-foreground/70 mb-2'>
+                  {cert.year}
+                </p>
+                <p className='text-xs sm:text-sm text-foreground/80'>
+                  {cert.description}
+                </p>
               </motion.div>
             ))}
           </div>
@@ -278,7 +375,7 @@ export function ResumePage() {
       </main>
 
       <footer className='py-8'>
-        <div className='max-w-6xl mx-auto px-4 flex flex-col items-center'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center'>
           <div className='flex gap-2 mb-4'>
             <Link href='https://github.com/fletchertyler914' passHref>
               <Button
@@ -354,12 +451,16 @@ function ExperienceCard({ experience }: { experience: Experience }) {
       transition={{ duration: 0.45 }}
       className='glass rounded-2xl p-6'
     >
-      <h4 className='text-xl md:text-2xl font-bold font-display mb-1'>
+      <h4 className='text-lg sm:text-xl md:text-2xl font-bold font-display mb-1'>
         {experience.title}
       </h4>
-      <p className='text-foreground/90 mb-1'>{experience.company}</p>
-      <p className='text-sm text-foreground/70 mb-3'>{experience.date}</p>
-      <ul className='list-disc list-inside space-y-2 text-foreground/85'>
+      <p className='text-sm sm:text-base text-foreground/90 mb-1'>
+        {experience.company}
+      </p>
+      <p className='text-xs sm:text-sm text-foreground/70 mb-3'>
+        {experience.date}
+      </p>
+      <ul className='list-disc list-inside space-y-2 text-xs sm:text-sm text-foreground/85'>
         {experience.responsibilities.map((resp, idx) => (
           <li key={idx}>{resp}</li>
         ))}

@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html
       lang='en'
-      className={`${montserrat.variable} ${spaceGrotesk.variable}`}
+      className={`${montserrat.variable} ${spaceGrotesk.variable} dark`}
     >
       <body
         className={`antialiased bg-background text-foreground bg-[radial-gradient(1200px_600px_at_20%_-10%,rgba(99,102,241,0.18),transparent),radial-gradient(800px_400px_at_100%_10%,rgba(56,189,248,0.12),transparent),radial-gradient(600px_300px_at_0%_60%,rgba(168,85,247,0.12),transparent)] min-h-screen relative`}
